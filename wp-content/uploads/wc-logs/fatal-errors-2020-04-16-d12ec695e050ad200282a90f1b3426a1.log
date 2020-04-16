@@ -1,0 +1,6 @@
+2020-04-16T07:50:24+00:00 CRITICAL Maximum execution time of 120 seconds exceeded in C:\wamp64\www\shipdongho\wp-includes\Requests\Transport\cURL.php on line 462
+
+2020-04-16T07:52:48+00:00 CRITICAL Maximum execution time of 120 seconds exceeded in C:\wamp64\www\shipdongho\wp-includes\Requests\Transport\cURL.php on line 462
+
+2020-04-16T07:54:23+00:00 CRITICAL Maximum execution time of 120 seconds exceeded in C:\wamp64\www\shipdongho\wp-includes\Requests\Transport\cURL.php on line 162
+

@@ -110,16 +110,27 @@ class NextendSocialLoginAvatar {
                     }
                     $avatarTempPath = download_url($avatarUrl);
                     if (!is_wp_error($avatarTempPath)) {
-                        $filename     = pathinfo($avatarTempPath, PATHINFO_FILENAME);
-                        $UMUploadTemp = UM()->files()->upload_temp . $filename . '/';
-                        if (wp_mkdir_p($UMUploadTemp)) {
-                            if (rename($avatarTempPath, $UMUploadTemp . $filename . '.' . $extension)) {
-                                UM()
-                                    ->files()
-                                    ->new_user_upload($user_id, $UMUploadTemp . $filename . '.' . $extension, 'profile_photo');
-                            }
+                        $umAvatarKey         = 'profile_photo';
+                        $umNameWithExtension = $umAvatarKey . '.' . $extension;
+                        $umUserAvatarDir     = UM()
+                            ->uploader()
+                            ->get_upload_user_base_dir($user_id, true);
+                        if ($umUserAvatarDir) {
+                            $umUserAvatarPath = $umUserAvatarDir . DIRECTORY_SEPARATOR . $umNameWithExtension;
+                            $umAvatarInfo     = @getimagesize($avatarTempPath);
+
+                            /*this copy will be deleted after resizing*/
+                            copy($avatarTempPath, $umUserAvatarPath);
+                            UM()
+                                ->uploader()
+                                ->resize_image($umUserAvatarPath, $umUserAvatarPath, $umAvatarKey, $user_id, '0,0,' . $umAvatarInfo[0] . ',' . $umAvatarInfo[0]);
+                            /*the final profile_photo*/
+                            copy($avatarTempPath, $umUserAvatarPath);
+
+                            update_user_meta($user_id, $umAvatarKey, $umNameWithExtension);
                         }
                     }
+                    unlink($avatarTempPath);
 
                     UM()
                         ->user()
@@ -171,8 +182,11 @@ class NextendSocialLoginAvatar {
              * $original_attachment_id is false, if the user has had avatar set but the path is not found.
              */
             $original_attachment_id = get_user_meta($user_id, $wpdb->get_blog_prefix($blog_id) . 'user_avatar', true);
-            if ($original_attachment_id && !get_attached_file($original_attachment_id)) {
-                $original_attachment_id = false;
+            if ($original_attachment_id) {
+                $attached_file = get_attached_file($original_attachment_id);
+                if (($attached_file && !file_exists($attached_file)) || !$attached_file) {
+                    $original_attachment_id = false;
+                }
             }
             $overwriteAttachment = false;
             /**
